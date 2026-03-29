@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEURA OS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Space+Mono:wght@400;700&display=swap');
+:root{
+  --bg:#f5f4f0;--s:#fff;--b:#e5e2da;
+  --ink:#111;--m:#999;
+  --blue:#1a52be;--green:#1a7a3a;--red:#c0392b;--yellow:#e67e22;--purple:#7c3aed;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans JP',sans-serif;font-size:13px;min-height:100vh;}
+
+/* HDR */
+.hdr{background:var(--ink);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:99;}
+.hdr h1{font-size:15px;font-weight:900;letter-spacing:.5px;}
+.hdr small{font-family:'Space Mono',monospace;font-size:8px;color:rgba(255,255,255,.3);letter-spacing:2px;display:block;margin-top:1px;}
+.sync-badge{font-family:'Space Mono',monospace;font-size:9px;padding:3px 10px;border-radius:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.35);}
+.sync-badge.ok{color:#4ade80;background:rgba(74,222,128,.12);}
+
+/* TABS */
+.tabs{background:var(--s);border-bottom:1px solid var(--b);padding:0 20px;display:flex;overflow-x:auto;position:sticky;top:48px;z-index:98;}
+.tab{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:11px 14px;border-bottom:2px solid transparent;cursor:pointer;color:var(--m);white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;}
+.tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+.nb{font-size:8px;background:#f0ede5;color:var(--m);padding:1px 5px;border-radius:8px;margin-left:3px;}
+.tab.active .nb{background:var(--ink);color:#fff;}
+
+/* LAYOUT */
+.wrap{padding:16px 20px 80px;max-width:900px;margin:0 auto;}
+
+/* CARD */
+.card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:16px 18px;margin-bottom:14px;}
+.card-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--m);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;}
+
+/* INPUTS */
+textarea.ti{width:100%;background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:10px 13px;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--ink);outline:none;resize:none;line-height:1.7;}
+textarea.ti:focus{border-color:var(--ink);}
+input.ii{width:100%;background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:9px 12px;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--ink);outline:none;}
+input.ii:focus{border-color:var(--ink);}
+
+/* BUTTONS */
+.btn{background:var(--ink);color:#fff;border:none;border-radius:6px;padding:9px 18px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.btn:hover{background:#333;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn.out{background:none;color:var(--ink);border:1px solid var(--b);}
+.btn.out:hover{border-color:var(--ink);}
+.btn.sm{padding:5px 12px;font-size:9px;}
+.btn.red{background:none;color:var(--red);border:1px solid var(--red);}
+
+/* AI LOG */
+.log{background:#0d0d0d;border-radius:7px;padding:11px 14px;height:130px;overflow-y:auto;margin-top:12px;}
+.ll{font-family:'Space Mono',monospace;font-size:10px;line-height:1.9;color:#3a3a3a;}
+.ll .t{color:#2a2a2a;margin-right:6px;}
+.ll.L .m{color:#60a5fa;}.ll.S .m{color:#6ee7b7;}.ll.O .m{color:#c4b5fd;}.ll.R .m{color:#fcd34d;}.ll.sys .m{color:#4a4a4a;}
+
+/* AGENTS */
+.ag-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.ab{background:var(--s);border:1px solid var(--b);border-radius:7px;padding:10px 12px;}
+.ab.ldr{border-color:var(--ink);}
+.al{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;margin-bottom:2px;}
+.an{font-weight:700;font-size:11px;margin-bottom:1px;}
+.ar{font-size:10px;color:var(--m);}
+.ast{display:flex;align-items:center;gap:4px;margin-top:6px;font-family:'Space Mono',monospace;font-size:9px;color:var(--m);}
+.sd{width:5px;height:5px;border-radius:50%;background:var(--b);}
+.sd.run{background:#f59e0b;animation:blink 1s infinite;}
+.sd.done{background:#4ade80;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* TASKS */
+.tc{background:var(--s);border:1px solid var(--b);border-radius:7px;padding:11px 13px;margin-bottom:7px;display:grid;grid-template-columns:18px 1fr auto;gap:9px;align-items:flex-start;}
+.tc:hover{border-color:#ccc;}
+.tc.done{opacity:.35;}
+.tc.done .tn{text-decoration:line-through;}
+.tcb{width:17px;height:17px;border:2px solid var(--b);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:2px;}
+.tcb.chk{background:var(--green);border-color:var(--green);color:#fff;}
+.tn{font-weight:700;font-size:12px;margin-bottom:2px;}
+.td{font-size:11px;color:var(--m);margin-bottom:5px;line-height:1.5;}
+.tm{display:flex;gap:4px;flex-wrap:wrap;}
+.ch{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:3px;}
+.ch-c{background:#f0ede5;color:var(--m);}
+.ch-H{background:#fde8e8;color:var(--red);}
+.ch-M{background:#fef3e2;color:var(--yellow);}
+.ch-L{background:#e8f5ee;color:var(--green);}
+.op{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.xbtn{background:none;border:none;cursor:pointer;color:var(--m);font-size:13px;padding:2px;}
+.xbtn:hover{color:var(--red);}
+
+/* DIARY */
+.diary-item{border-left:3px solid var(--b);padding:10px 14px;margin-bottom:10px;background:var(--bg);border-radius:0 7px 7px 0;}
+.diary-item.today{border-left-color:var(--blue);}
+.di-date{font-family:'Space Mono',monospace;font-size:9px;color:var(--m);margin-bottom:4px;display:flex;justify-content:space-between;}
+.di-text{font-size:12px;line-height:1.7;}
+.di-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.di-tag{font-family:'Space Mono',monospace;font-size:8px;padding:1px 6px;border-radius:3px;background:var(--b);color:var(--m);}
+
+/* FILTER */
+.fr{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.fb{font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;border-radius:14px;border:1px solid var(--b);background:var(--s);color:var(--m);cursor:pointer;}
+.fb.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+/* BOARD */
+.board-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.bc{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:13px 15px;}
+.bh{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:#fff;flex-shrink:0;}
+.bn{font-weight:700;font-size:12px;}.br{font-size:10px;color:var(--m);}
+.bp{height:4px;background:var(--b);border-radius:2px;margin-bottom:7px;overflow:hidden;}
+.bf{height:100%;border-radius:2px;transition:width .6s;}
+.bt{font-size:11px;padding:3px 0;border-bottom:1px solid #f5f2ec;display:flex;gap:5px;align-items:center;}
+.bt:last-child{border-bottom:none;}
+.bdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:#fff;padding:9px 16px;border-radius:6px;font-family:'Space Mono',monospace;font-size:10px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* PANES */
+.pane{display:none;}.pane.active{display:block;}
+
+.row{display:flex;gap:8px;align-items:flex-end;}
+.lbl{font-size:11px;color:var(--m);margin-bottom:4px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <h1>NEURA OS</h1>
+    <small>COMPANY BRAIN — v3 LONG MEMORY</small>
+  </div>
+  <span class="sync-badge ok" id="syncBadge">● SYNCED</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('home',this)">ホーム</button>
+  <button class="tab" onclick="sw('tasks',this)">タスク <span class="nb" id="nb-t">0</span></button>
+  <button class="tab" onclick="sw('diary',this)">日報 <span class="nb" id="nb-d">0</span></button>
+  <button class="tab" onclick="sw('kb',this)">知識 <span class="nb" id="nb-k">0</span></button>
+  <button class="tab" onclick="sw('board',this)">ボード</button>
+</div>
+
+<div class="wrap">
+
+<!-- ===== HOME ===== -->
+<div class="pane active" id="pane-home">
+
+  <!-- 日報クイック入力 -->
+  <div class="card">
+    <div class="card-title">
+      <span>TODAY'S REPORT — 今日の状況をサッと投げる</span>
+      <span style="font-size:10px;color:var(--m);" id="todayDate"></span>
+    </div>
+    <textarea class="ti" id="diaryIn" rows="4"
+      placeholder="例：・au光 今日8件訪問、2件成約&#10;・サイネージ A社から広告問い合わせあり&#10;・メンバーBが連絡取れず&#10;・来週の会議日程を決めたい&#10;何でも投げてOK。AIが整理してToDoに変換します。"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+      <button class="btn out sm" onclick="quickSave()">📝 記録だけする</button>
+      <button class="btn sm" id="analyzeBtn" onclick="analyzeDiary()">⚡ AIがToDoに変換</button>
+    </div>
+    <div id="homeLog" style="display:none;">
+      <div class="log" id="homeLogBox"></div>
+    </div>
+  </div>
+
+  <!-- エージェント状態 -->
+  <div class="ag-row">
+    <div class="ab ldr">
+      <div class="al" style="color:#111;">LEADER</div>
+      <div class="an">秘書AI</div>
+      <div class="ar">文脈理解・割り振り</div>
+      <div class="ast"><div class="sd" id="sd-L"></div><span id="ss-L">待機</span></div>
+    </div>
+    <div class="ab">
+      <div class="al" style="color:var(--blue);">SALES</div>
+      <div class="an">営業AI</div>
+      <div class="ar">訪問・代理店・契約</div>
+      <div class="ast"><div class="sd" id="sd-S"></div><span id="ss-S">待機</span></div>
+    </div>
+    <div class="ab">
+      <div class="al" style="color:var(--purple);">OPS</div>
+      <div class="an">管理AI</div>
+      <div class="ar">採用・財務・事務</div>
+      <div class="ast"><div class="sd" id="sd-O"></div><span id="ss-O">待機</span></div>
+    </div>
+    <div class="ab">
+      <div class="al" style="color:var(--yellow);">RESEARCH</div>
+      <div class="an">調査AI</div>
+      <div class="ar">市場・分析・SNS</div>
+      <div class="ast"><div class="sd" id="sd-R"></div><span id="ss-R">待機</span></div>
+    </div>
+  </div>
+
+  <!-- 最近のタスク（3件） -->
+  <div class="card">
+    <div class="card-title">RECENT TASKS <span style="font-size:10px;cursor:pointer;color:var(--blue);" onclick="sw('tasks',document.querySelector('.tab:nth-child(2)'))">すべて見る →</span></div>
+    <div id="recentTasks"></div>
+  </div>
+
+  <!-- 会社メモリーサマリー -->
+  <div class="card">
+    <div class="card-title">COMPANY MEMORY — 蓄積された会社の記憶</div>
+    <div id="memorySummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div style="text-align:center;padding:12px;background:var(--bg);border-radius:6px;">
+        <div style="font-size:22px;font-weight:900;color:var(--blue);" id="mem-diary">0</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--m);margin-top:2px;">日報記録</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:var(--bg);border-radius:6px;">
+        <div style="font-size:22px;font-weight:900;color:var(--green);" id="mem-tasks">0</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--m);margin-top:2px;">累計タスク</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:var(--bg);border-radius:6px;">
+        <div style="font-size:22px;font-weight:900;color:var(--purple);" id="mem-kb">0</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--m);margin-top:2px;">知識ベース</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASKS ===== -->
+<div class="pane" id="pane-tasks">
+  <div class="card">
+    <div class="card-title">TASK INPUT — ゴールを直接入力してタスク生成</div>
+    <textarea class="ti" id="goalIn" rows="2" placeholder="例：来月までにサイネージ新規3社取りたい"></textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+      <button class="btn sm" id="goBtn" onclick="runFromGoal()">▶ AIでタスク化</button>
+    </div>
+  </div>
+
+  <div class="fr">
+    <button class="fb active" onclick="setF('all',this)">すべて</button>
+    <button class="fb" onclick="setF('HIGH',this)">HIGH</button>
+    <button class="fb" onclick="setF('MED',this)">MED</button>
+    <button class="fb" onclick="setF('done',this)">完了</button>
+  </div>
+  <div id="taskList"></div>
+</div>
+
+<!-- ===== DIARY ===== -->
+<div class="pane" id="pane-diary">
+  <div class="card">
+    <div class="card-title">DIARY LOG — 蓄積された会社の記憶</div>
+    <div id="diaryList"></div>
+  </div>
+</div>
+
+<!-- ===== KB ===== -->
+<div class="pane" id="pane-kb">
+  <div class="card">
+    <div class="card-title">KNOWLEDGE BASE — 会社の判断材料</div>
+    <div style="margin-bottom:10px;">
+      <div class="lbl">カテゴリ</div>
+      <div class="fr" style="margin:0 0 10px;">
+        <button class="fb active" onclick="setKbCat('vision',this)">ビジョン</button>
+        <button class="fb" onclick="setKbCat('sales',this)">営業パターン</button>
+        <button class="fb" onclick="setKbCat('member',this)">メンバー</button>
+        <button class="fb" onclick="setKbCat('rule',this)">判断ルール</button>
+        <button class="fb" onclick="setKbCat('history',this)">過去の決定</button>
+      </div>
+      <input class="ii" id="kbTitle" placeholder="タイトル" style="margin-bottom:8px;">
+      <textarea class="ti" id="kbContent" rows="3" placeholder="詳しく書くほどAIの精度が上がります"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+        <button class="btn sm" onclick="addKb()">+ 追加</button>
+      </div>
+    </div>
+
+    <!-- Built-in -->
+    <div style="background:#f0f4fd;border:1px solid #bfdbfe;border-radius:7px;padding:13px 15px;margin-bottom:12px;">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--blue);margin-bottom:6px;">BUILT-IN — NEURA GROUP</div>
+      <div style="font-size:11px;color:#444;line-height:1.8;">
+        <strong>ビジョン：</strong>組織のゴールを定義してAIエージェントに渡し、解決まで自律させる設計をする会社<br>
+        <strong>事業：</strong>デジタルサイネージ広告・au光訪問販売・オーダースーツ<br>
+        <strong>売上構造：</strong>売上＝数×単価。数→採用・代理店。単価→商品・契約条件<br>
+        <strong>優先基準：</strong>売上直結度＞緊急性＞自動化可能性＞放置リスク
+      </div>
+    </div>
+
+    <div id="kbList"></div>
+  </div>
+</div>
+
+<!-- ===== BOARD ===== -->
+<div class="pane" id="pane-board">
+  <div class="board-grid" id="boardGrid"></div>
+</div>
+
+</div><!-- /wrap -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STORES ──
+const ST = 'neura_os_tasks_v5';
+const SD = 'neura_os_diary_v5';
+const SK = 'neura_os_kb_v5';
+
+const AGENTS = [
+  {id:'L', name:'秘書AI',   color:'#111',    cats:['管理','法務','方針']},
+  {id:'S', name:'営業AI',   color:'#1a52be', cats:['営業','代理店','契約','訪問販売','提案','新規']},
+  {id:'O', name:'管理AI',   color:'#7c3aed', cats:['採用','事務','財務','経費','HR']},
+  {id:'R', name:'調査AI',   color:'#b45309', cats:['調査','リサーチ','分析','SNS','マーケ','市場']},
+];
+
+let tasks=[], diary=[], kb=[], curF='all', curKbCat='vision';
+
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const nt=()=>new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const sl=ms=>new Promise(r=>setTimeout(r,ms));
+const today=()=>new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
+
+// ── STORAGE ──
+async function load(){
+  try{const r=await window.storage.get(ST);if(r)tasks=JSON.parse(r.value);}catch(e){tasks=[];}
+  try{const r=await window.storage.get(SD);if(r)diary=JSON.parse(r.value);}catch(e){diary=[];}
+  try{const r=await window.storage.get(SK);if(r)kb=JSON.parse(r.value);}catch(e){kb=[];}
+  renderAll();
+}
+async function save(){
+  try{
+    await window.storage.set(ST,JSON.stringify(tasks));
+    await window.storage.set(SD,JSON.stringify(diary));
+    await window.storage.set(SK,JSON.stringify(kb));
+    setSyncBadge(true);
+  }catch(e){setSyncBadge(false);}
+}
+function setSyncBadge(ok){
+  const el=document.getElementById('syncBadge');
+  el.textContent=ok?'● SYNCED':'● ERROR';
+  el.className='sync-badge'+(ok?' ok':'');
+}
+
+// ── LOG ──
+function log(boxId,ag,msg){
+  const lb=document.getElementById(boxId);
+  if(!lb)return;
+  const d=document.createElement('div');
+  d.className=`ll ${ag}`;
+  d.innerHTML=`<span class="t">${nt()}</span><span class="m">[${AGENTS.find(a=>a.id===ag)?.name||ag}] ${msg}</span>`;
+  lb.appendChild(d);lb.scrollTop=lb.scrollHeight;
+}
+function setAg(id,st){
+  const d=document.getElementById(`sd-${id}`),s=document.getElementById(`ss-${id}`);
+  if(!d||!s)return;
+  d.className='sd'+(st==='run'?' run':st==='done'?' done':'');
+  s.textContent=st==='run'?'処理中':st==='done'?'完了':'待機';
+}
+
+// ── SYSTEM PROMPT ──
+function buildPrompt(){
+  const recent=diary.slice(0,10).map(d=>`[${d.date}] ${d.text}`).join('\n')||'（記録なし）';
+  const kbText=kb.map(k=>`[${k.cat}] ${k.title}: ${k.content}`).join('\n')||'（未登録）';
+  return `あなたはNEURA GROUPの経営AIアシスタントです。
+以下の会社情報・蓄積された記憶を必ず参照してタスクを生成してください。
+
+【会社基本情報】
+会社名：株式会社NEURA GROUP / 代表：安原稜恵（21歳）
+ビジョン：組織のゴールを定義してAIエージェントに渡し、解決まで自律させる設計をする会社
+事業：デジタルサイネージ広告・au光訪問販売・オーダースーツ
+売上＝数×単価。数→採用・代理店開拓。単価→商品設計・契約条件改善
+優先基準：売上直結度＞緊急性＞自動化可能性＞放置リスク
+
+【最近10件の日報（会社の現状）】
+${recent}
+
+【知識ベース】
+${kbText}
+
+【エージェント】
+S=営業AI（訪問・代理店・契約） / O=管理AI（採用・財務・事務） / R=調査AI（調査・SNS・分析）
+
+ルール：JSONのみ返す。前置き不要。
+[{"name":"タスク名15字以内","desc":"具体内容40字以内","cat":"カテゴリ","pri":"HIGH/MED/LOW","deadline":"今週中/今月中/来月中","agentId":"S/O/R"}]`;
+}
+
+// ── ANALYZE DIARY → TASKS ──
+async function analyzeDiary(){
+  const text=document.getElementById('diaryIn').value.trim();
+  if(!text){showToast('まず今日の状況を入力してください');return;}
+
+  // 先に記録する
+  const entry={id:uid(),date:today(),text,createdAt:new Date().toISOString()};
+  diary.unshift(entry);
+
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('homeLog').style.display='block';
+  document.getElementById('homeLogBox').innerHTML='';
+  AGENTS.forEach(a=>setAg(a.id,''));
+
+  setAg('L','run');
+  log('homeLogBox','L','日報を受信。蓄積データと照合してタスク化します...');
+  log('homeLogBox','L',`蓄積日報：${diary.length}件 / 知識ベース：${kb.length}件 を参照中`);
+  await sl(500);
+
+  let newTasks=[];
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1200,
+        system:buildPrompt(),
+        messages:[{role:'user',content:`今日の日報：「${text}」\n\nこの日報と過去の状況を踏まえ、今やるべきタスクを生成してください。`}]
+      })
+    });
+    const data=await res.json();
+    const raw=data.content?.[0]?.text||'[]';
+    newTasks=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    log('homeLogBox','L',`${newTasks.length}件のタスクを生成`);
+  }catch(e){
+    log('homeLogBox','sys','フォールバックモードで実行');
+    newTasks=fallback(text);
+  }
+
+  setAg('L','done');await sl(200);
+  for(const t of newTasks){
+    const ag=AGENTS.find(a=>a.id===t.agentId)||AGENTS[1];
+    setAg(ag.id,'run');
+    t.id=uid();t.done=false;t.createdAt=new Date().toISOString();t.source='diary';
+    tasks.unshift(t);
+    log('homeLogBox',ag.id,`「${t.name}」受領`);
+    await sl(120);
+  }
+  AGENTS.slice(1).forEach(a=>setAg(a.id,'done'));
+  log('homeLogBox','L','完了');
+
+  await save();
+  document.getElementById('diaryIn').value='';
+  document.getElementById('analyzeBtn').disabled=false;
+  renderAll();
+  showToast(`記録＋${newTasks.length}件のタスクを生成しました`);
+  await sl(5000);
+  AGENTS.forEach(a=>setAg(a.id,''));
+  document.getElementById('homeLog').style.display='none';
+}
+
+// 記録だけ
+async function quickSave(){
+  const text=document.getElementById('diaryIn').value.trim();
+  if(!text){showToast('内容を入力してください');return;}
+  diary.unshift({id:uid(),date:today(),text,createdAt:new Date().toISOString()});
+  await save();
+  document.getElementById('diaryIn').value='';
+  renderAll();showToast('日報を記録しました');
+}
+
+// ゴールから直接
+async function runFromGoal(){
+  const goal=document.getElementById('goalIn').value.trim();
+  if(!goal){showToast('ゴールを入力してください');return;}
+  document.getElementById('goBtn').disabled=true;
+  setAg('L','run');
+  let newTasks=[];
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1200,
+        system:buildPrompt(),
+        messages:[{role:'user',content:`ゴール：「${goal}」\n達成に必要なタスクを生成してください。`}]
+      })
+    });
+    const data=await res.json();
+    newTasks=JSON.parse(data.content?.[0]?.text.replace(/```json|```/g,'').trim()||'[]');
+  }catch(e){newTasks=fallback(goal);}
+  setAg('L','done');
+  newTasks.forEach(t=>{t.id=uid();t.done=false;t.createdAt=new Date().toISOString();tasks.unshift(t);});
+  AGENTS.slice(1).forEach(a=>{if(newTasks.find(t=>t.agentId===a.id))setAg(a.id,'done');});
+  await save();
+  document.getElementById('goalIn').value='';
+  document.getElementById('goBtn').disabled=false;
+  renderAll();showToast(`${newTasks.length}件のタスクを生成しました`);
+  await sl(3000);AGENTS.forEach(a=>setAg(a.id,''));
+}
+
+function fallback(text){
+  return[
+    {name:'状況整理・次手を決める',desc:`「${text.slice(0,15)}」の対応策を検討`,cat:'管理',pri:'HIGH',deadline:'今週中',agentId:'O'},
+    {name:'関連アクションリスト化',desc:'必要なアクションをリスト化',cat:'調査',pri:'HIGH',deadline:'今週中',agentId:'R'},
+    {name:'担当者へ指示・共有',cat:'管理',desc:'チームに状況を共有して役割を決める',pri:'MED',deadline:'今週中',agentId:'O'},
+  ];
+}
+
+// ── KB ──
+function setKbCat(c,btn){
+  curKbCat=c;
+  document.querySelectorAll('#pane-kb .fr .fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+async function addKb(){
+  const t=document.getElementById('kbTitle').value.trim();
+  const c=document.getElementById('kbContent').value.trim();
+  if(!t||!c){showToast('タイトルと内容を入力してください');return;}
+  kb.unshift({id:uid(),cat:curKbCat,title:t,content:c,createdAt:new Date().toISOString()});
+  document.getElementById('kbTitle').value='';
+  document.getElementById('kbContent').value='';
+  await save();renderKb();showToast('知識を追加しました');
+}
+async function delKb(id){kb=kb.filter(k=>k.id!==id);await save();renderKb();}
+
+const CAT_C={vision:'#1a52be',sales:'#1a7a3a',member:'#7c3aed',rule:'#c0392b',history:'#b45309'};
+const CAT_L={vision:'ビジョン',sales:'営業パターン',member:'メンバー',rule:'判断ルール',history:'過去の決定'};
+
+// ── RENDER ──
+function renderAll(){
+  renderHome();renderTasks();renderDiary();renderKb();renderBoard();
+  document.getElementById('nb-t').textContent=tasks.filter(t=>!t.done).length;
+  document.getElementById('nb-d').textContent=diary.length;
+  document.getElementById('nb-k').textContent=kb.length;
+  document.getElementById('mem-diary').textContent=diary.length;
+  document.getElementById('mem-tasks').textContent=tasks.length;
+  document.getElementById('mem-kb').textContent=kb.length;
+  document.getElementById('todayDate').textContent=today();
+}
+
+function renderHome(){
+  const el=document.getElementById('recentTasks');
+  const recent=tasks.filter(t=>!t.done).slice(0,3);
+  if(recent.length===0){el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--m);font-size:11px;">タスクがありません</div>`;return;}
+  el.innerHTML=recent.map(t=>taskHTML(t)).join('');
+}
+
+function renderTasks(){
+  let list=tasks;
+  if(curF==='done') list=tasks.filter(t=>t.done);
+  else if(curF==='HIGH') list=tasks.filter(t=>t.pri==='HIGH'&&!t.done);
+  else if(curF==='MED')  list=tasks.filter(t=>t.pri==='MED'&&!t.done);
+  else list=[...tasks.filter(t=>!t.done),...tasks.filter(t=>t.done)];
+  const el=document.getElementById('taskList');
+  el.innerHTML=list.length===0?`<div style="text-align:center;padding:32px;color:var(--m);font-size:11px;">タスクがありません</div>`:list.map(t=>taskHTML(t)).join('');
+}
+
+function taskHTML(t){
+  const ag=AGENTS.find(a=>a.id===t.agentId)||AGENTS[1];
+  return `<div class="tc ${t.done?'done':''}">
+    <div class="tcb ${t.done?'chk':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
+    <div>
+      <div class="tn">${t.name}</div>
+      <div class="td">${t.desc||''}</div>
+      <div class="tm">
+        <span class="ch ch-c">${t.cat||''}</span>
+        <span class="ch ch-${(t.pri||'M')[0]}">${t.pri||'MED'}</span>
+        ${t.deadline?`<span class="ch" style="background:#f0f4fd;color:var(--blue);">${t.deadline}</span>`:''}
+        <span class="op" style="background:${ag.color}22;color:${ag.color};">${ag.name}</span>
+      </div>
+    </div>
+    <button class="xbtn" onclick="delTask('${t.id}')">✕</button>
+  </div>`;
+}
+
+function renderDiary(){
+  const el=document.getElementById('diaryList');
+  if(diary.length===0){el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--m);font-size:11px;">まだ日報がありません</div>`;return;}
+  el.innerHTML=diary.map((d,i)=>`
+    <div class="diary-item ${i===0?'today':''}">
+      <div class="di-date">
+        <span>${d.date}</span>
+        <button class="xbtn" onclick="delDiary('${d.id}')">✕</button>
+      </div>
+      <div class="di-text">${d.text.replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+}
+
+function renderKb(){
+  document.getElementById('nb-k').textContent=kb.length;
+  const el=document.getElementById('kbList');
+  if(kb.length===0){el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--m);font-size:11px;">まだ知識が追加されていません</div>`;return;}
+  el.innerHTML=kb.map(k=>`
+    <div style="border-left:3px solid ${CAT_C[k.cat]||'#999'};padding:10px 13px;background:var(--bg);border-radius:0 6px 6px 0;margin-bottom:8px;">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;color:${CAT_C[k.cat]||'#999'};margin-bottom:3px;display:flex;justify-content:space-between;">
+        <span>${CAT_L[k.cat]||k.cat}</span>
+        <button class="xbtn" onclick="delKb('${k.id}')">✕</button>
+      </div>
+      <div style="font-weight:700;font-size:12px;margin-bottom:3px;">${k.title}</div>
+      <div style="font-size:11px;color:#444;line-height:1.7;">${k.content}</div>
+    </div>`).join('');
+}
+
+function renderBoard(){
+  const el=document.getElementById('boardGrid');
+  el.innerHTML=AGENTS.slice(1).map(a=>{
+    const mine=tasks.filter(t=>t.agentId===a.id);
+    const done=mine.filter(t=>t.done).length;
+    const pct=mine.length?Math.round(done/mine.length*100):0;
+    const active=mine.filter(t=>!t.done).slice(0,5);
+    return `<div class="bc">
+      <div class="bh">
+        <div class="av" style="background:${a.color};">${a.name[0]}</div>
+        <div><div class="bn">${a.name}</div><div class="br">${mine.filter(t=>!t.done).length}件担当中</div></div>
+        <div style="margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;color:var(--m);">${pct}%</div>
+      </div>
+      <div class="bp"><div class="bf" style="width:${pct}%;background:${a.color};"></div></div>
+      <div>${active.length===0?`<div class="bt" style="color:var(--m);">タスクなし</div>`:active.map(t=>`<div class="bt"><div class="bdot" style="background:${{HIGH:'#c0392b',MED:'#e67e22',LOW:'#1a7a3a'}[t.pri]};"></div><div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">${t.name}</div></div>`).join('')}
+      ${mine.filter(t=>!t.done).length>5?`<div style="font-size:10px;color:var(--m);padding:3px 0;">+${mine.filter(t=>!t.done).length-5}件</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ACTIONS ──
+async function toggleTask(id){const t=tasks.find(t=>t.id===id);if(t){t.done=!t.done;await save();renderAll();}}
+async function delTask(id){tasks=tasks.filter(t=>t.id!==id);await save();renderAll();showToast('削除しました');}
+async function delDiary(id){diary=diary.filter(d=>d.id!==id);await save();renderAll();showToast('削除しました');}
+
+function setF(f,btn){
+  curF=f;
+  document.querySelectorAll('#pane-tasks .fr .fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+// ── TAB ──
+function sw(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+}
+
+// ── TOAST ──
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+load();
+</script>
+</body>
+</html>
